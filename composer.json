@@ -1,0 +1,26 @@
+{
+    "name": "dnapierata/phalcon-sqlsrv",
+    "homepage": "https://github.com/dnapierata/phalcon-sqlsrv",
+    "description": "Phalcon MS SQL Adapter",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "phalcon",
+        "mssql",
+        "sqlsrv",
+        "adapter",
+        "dblib",
+        "sybase"
+    ],
+    "authors": [{
+        "name": "David Napierata"
+    }],
+    "repositories": [{
+        "type": "git",
+        "url": "https://github.com/dnapierata/phalcon-sqlsrv"
+    }],
+    "require": {
+        "php": ">=5.4",
+        "ext-phalcon": "2.*",
+    }
+}
