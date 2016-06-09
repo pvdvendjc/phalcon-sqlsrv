@@ -22,5 +22,10 @@
     "require": {
         "php": ">=5.4",
         "ext-phalcon": "2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Phalcon\\": "Phalcon/"
+        }
     }
 }
