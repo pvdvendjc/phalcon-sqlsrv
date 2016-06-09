@@ -25,6 +25,7 @@ use Phalcon\Db\Result\PdoMssql as ResultPdo;
 class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterface
 {
     protected $_type = 'mssql';
+    protected $_dialectType = 'mssql';
 
     /**
      * This method is automatically called in Phalcon\Db\Adapter\Pdo constructor.
