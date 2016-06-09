@@ -2,7 +2,8 @@
 - Phalcon 2.0.8 support
 ```php
 $di->set('db', function() use ($config) {
-	return new \Phalcon\Db\Adapter\Pdo\Sqlsrv(array(
+	return new \Phalcon\Db\Adapter\Pdo\Mssql(array(
+	    "name"         => "dblib",
 		"host"         => $config->database->host,
 		"username"     => $config->database->username,
 		"password"     => $config->database->password,

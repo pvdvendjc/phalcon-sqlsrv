@@ -3,13 +3,14 @@
 namespace Phalcon\Db\Adapter\Pdo;
 
 use Phalcon\Db\Column;
-use Phalcon\Db\Result\PdoSqlsrv as ResultPdo;
+use Phalcon\Db\Result\PdoMssql as ResultPdo;
 
 /**
- * Phalcon\Db\Adapter\Pdo\Sqlsrv
+ * Phalcon\Db\Adapter\Pdo\Mssql
  * Specific functions for the MsSQL database system
  * <code>
  * $config = array(
+ * "name" => "mssql",
  * "host" => "192.168.0.11",
  * "dbname" => "blog",
  * "port" => 3306,
@@ -21,11 +22,9 @@ use Phalcon\Db\Result\PdoSqlsrv as ResultPdo;
  *
  * @property \Phalcon\Db\Dialect\Sqlsrv $_dialect
  */
-class Sqlsrv extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterface
+class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterface
 {
-
-    protected $_type = 'sqlsrv';
-    protected $_dialectType = 'sqlsrv';
+    protected $_type = 'mssql';
 
     /**
      * This method is automatically called in Phalcon\Db\Adapter\Pdo constructor.
@@ -53,8 +52,27 @@ class Sqlsrv extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInter
 
         $options[\PDO::ATTR_ERRMODE] = \PDO::ERRMODE_EXCEPTION;
         $options[\PDO::ATTR_STRINGIFY_FETCHES] = true;
+        
+        if (!isset($descriptor['name'])) {
+            $descriptor['name'] = $this->_type;
+        }
+        //specific dsn elements
+        switch ($descriptor['name']) {
+            case 'sqlserv' :
+                $server_key = 'server';
+                $db_key = 'database';
+                break;
+            case 'dblib' :
+            case 'sybase' :
+            case 'mssql' :
+            default :
+                $server_key = 'host';
+                $db_key = 'dbname';
+                break;
+        }
+        
 
-        $this->_pdo = new \PDO("sqlsrv:server={$descriptor['host']};database={$descriptor['dbname']}", $descriptor['username'], $descriptor['password'], $options);
+        $this->_pdo = new \PDO("{$descriptor['name']}:$server_key={$descriptor['host']};$db_key={$descriptor['dbname']}", $descriptor['username'], $descriptor['password'], $options);
 
 //        $this->execute('SET QUOTED_IDENTIFIER ON');
 //        $this->execute("SET ANSI_WARNINGS ON ");
@@ -66,7 +84,7 @@ class Sqlsrv extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInter
          * Set dialect class
          */
         if (isset($descriptor['dialectClass']) === false) {
-            $dialectClass = 'Phalcon\\Db\\Dialect\\' . $this->_dialectType;
+            $dialectClass = "Phalcon\\Db\\Dialect\\Mssql";
         } else {
             $dialectClass = $descriptor['dialectClass'];
         }

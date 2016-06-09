@@ -13,7 +13,7 @@ namespace Phalcon\Db\Result;
  * }
  * </code>.
  */
-class PdoSqlsrv extends Pdo
+class PdoMssql extends Pdo
 {
     /**
      * Gets number of rows returned by a resultset
