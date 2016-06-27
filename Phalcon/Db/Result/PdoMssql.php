@@ -2,7 +2,6 @@
 
 namespace Phalcon\Db\Result;
 
-use Phalcon\Db\Adapter\Pdo\Mssql;
 /**
  * Phalcon\Db\Result\PdoSqlsrv
  * Encapsulates the resultset internals
@@ -31,14 +30,9 @@ class PdoMssql extends Pdo
         if ($rowCount === false) {
             $rowCount = $this->_pdoStatement->rowCount();
             
-            // Some MSSQL drivers will return -1 instead of the rowcount so we will execute an extra statement here
-            if ($rowCount === -1 && substr($this->_sqlStatement, 0, 6) == 'SELECT') {
-                $conn = new Mssql($this->_connection->_descriptor);
-                $res = $conn->query('SELECT COUNT(*) OVER() AS numrows,' . substr($this->_sqlStatement, 6), $this->_bindParams, $this->_bindTypes);
-                $row = $res->_pdoStatement->fetch();
-                if (!empty($row)) {
-                    $rowCount = $row['numrows'];
-                }
+            // Some MSSQL drivers will return -1 instead of the row count
+            if ($rowCount === -1) {
+                $rowCount = 100000; // Rather than execute an extra statement with a new connection, we set this to some large number so that the iterator can work
             }
             
             if ($rowCount === false) {

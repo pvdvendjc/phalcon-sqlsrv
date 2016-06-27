@@ -26,7 +26,6 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
 {
     protected $_type = 'mssql';
     protected $_dialectType = 'mssql';
-    public $_descriptor;
 
     /**
      * This method is automatically called in Phalcon\Db\Adapter\Pdo constructor.
