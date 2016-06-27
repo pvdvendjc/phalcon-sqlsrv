@@ -343,6 +343,23 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
             $cursor = \PDO::CURSOR_FWDONLY;
         }
 
+        // Perform the count now so the original statement is the last one executed
+        $rowCount = FALSE;
+        if (substr($sqlStatement, 0, 6) == 'SELECT' && strstr($sqlStatement, "COUNT(*)") === FALSE) {
+            $countStatement = "SELECT [NUM_ROWS] = COUNT(*) FROM ( $sqlStatement ) count_tbl";
+            if (is_array($bindParams)) {
+                $statement = $pdo->prepare($countStatement, array(\PDO::ATTR_CURSOR => $cursor));
+                if (is_object($statement)) {
+                    $statement = $this->executePrepared($statement, $bindParams, $bindTypes);
+                }
+            } else {
+                $statement = $pdo->prepare($countStatement, array(\PDO::ATTR_CURSOR => $cursor));
+                $statement->execute();
+            }
+            $count_result = $statement->fetch();
+            $rowCount = $count_result['NUM_ROWS'];
+        }
+        
         if (is_array($bindParams)) {
             $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
             if (is_object($statement)) {
@@ -361,7 +378,9 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
                 $eventsManager->fire('db:afterQuery', $this, $bindParams);
             }
 
-            return new ResultPdo($this, $statement, $sqlStatement, $bindParams, $bindTypes);
+             $result = new ResultPdo($this, $statement, $sqlStatement, $bindParams, $bindTypes);
+             $result->_rowCount = $rowCount;
+             return $result;
         }
 
         return $statement;

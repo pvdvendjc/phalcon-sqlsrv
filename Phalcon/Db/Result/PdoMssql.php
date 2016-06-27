@@ -15,6 +15,7 @@ namespace Phalcon\Db\Result;
  */
 class PdoMssql extends Pdo
 {
+    public $_rowCount = FALSE;
     /**
      * Gets number of rows returned by a resultset
      * <code>
@@ -27,18 +28,11 @@ class PdoMssql extends Pdo
     public function numRows()
     {
         $rowCount = $this->_rowCount;
-        if ($rowCount === false) {
+        if ($rowCount === FALSE) {
             $rowCount = $this->_pdoStatement->rowCount();
-            
-            // Some MSSQL drivers will return -1 instead of the row count
-            if ($rowCount === -1) {
-                $rowCount = 100000; // Rather than execute an extra statement with a new connection, we set this to some large number so that the iterator can work
-            }
-            
-            if ($rowCount === false) {
+            if ($rowCount === FALSE) {
                 parent::numRows();
             }
-
             $this->_rowCount = $rowCount;
         }
 
