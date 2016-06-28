@@ -346,11 +346,20 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         // Perform the count now so the original statement is the last one executed
         $rowCount = FALSE;
         if (substr($sqlStatement, 0, 6) == 'SELECT' && strstr($sqlStatement, "COUNT(*)") === FALSE) {
-            //TODO Extract any ORDER BY statements that are not used with TOP or OFFSET
-            $countStatement = str_replace("\r\n", ' ', $sqlStatement);
-            preg_match('/(ORDER BY[^\)]*)(OFFSET).*$/gi', $countStatement, $matches);
-            var_dump($matches); die();
-            $countStatement = "SELECT [NUM_ROWS] = COUNT(*) FROM ( $sqlStatement ) count_tbl";
+            $countStatement = $sqlStatement;
+            // IF the query contains ORDER BY without OFFSET or TOP 
+            // then we need to extract it before performing our COUNT(*) 
+            // since it is invalid in subqueries in SQL SERVER
+            if (substr($countStatement, 8, 3) != "TOP") {
+                $countStatement = str_replace("\r\n", ' ', $sqlStatement);
+                if (preg_match('/ORDER BY([^\)](?!OFFSET))*$/i', $countStatement, $matches)) {
+                    $start = strpos($countStatement, $matches[0]);
+                    $end = $start + strlen($matches[0]);
+                    $countStatement = substr($countStatement, 0, $start - 1) . substr($countStatement, $end);
+                }
+            }
+            // Wrap original query in subquery to get a row count
+            $countStatement = "SELECT [NUM_ROWS] = COUNT(*) FROM ( $countStatement ) count_tbl";
             if (is_array($bindParams)) {
                 $statement = $pdo->prepare($countStatement, array(\PDO::ATTR_CURSOR => $cursor));
                 if (is_object($statement)) {
