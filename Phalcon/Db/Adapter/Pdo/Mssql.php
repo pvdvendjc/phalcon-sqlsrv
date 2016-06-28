@@ -346,6 +346,10 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         // Perform the count now so the original statement is the last one executed
         $rowCount = FALSE;
         if (substr($sqlStatement, 0, 6) == 'SELECT' && strstr($sqlStatement, "COUNT(*)") === FALSE) {
+            //TODO Extract any ORDER BY statements that are not used with TOP or OFFSET
+            $countStatement = str_replace("\r\n", ' ', $sqlStatement);
+            preg_match('/(ORDER BY[^\)]*)(OFFSET).*$/gi', $countStatement, $matches);
+            var_dump($matches); die();
             $countStatement = "SELECT [NUM_ROWS] = COUNT(*) FROM ( $sqlStatement ) count_tbl";
             if (is_array($bindParams)) {
                 $statement = $pdo->prepare($countStatement, array(\PDO::ATTR_CURSOR => $cursor));
