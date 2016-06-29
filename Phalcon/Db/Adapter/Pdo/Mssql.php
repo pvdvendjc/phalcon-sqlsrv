@@ -352,7 +352,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
             // since it is invalid in subqueries in SQL SERVER
             if (substr($countStatement, 8, 3) != "TOP") {
                 $countStatement = str_replace("\r\n", ' ', $sqlStatement);
-                if (preg_match('/ORDER BY([^\)](?!OFFSET))*$/i', $countStatement, $matches)) {
+                if (preg_match('/ORDER BY(?:(?!OFFSET)(?!ORDER BY)(?!WHERE).)*$/i', $countStatement, $matches)) {
                     $start = strpos($countStatement, $matches[0]);
                     $end = $start + strlen($matches[0]);
                     $countStatement = substr($countStatement, 0, $start - 1) . substr($countStatement, $end);
