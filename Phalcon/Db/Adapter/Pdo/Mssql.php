@@ -236,6 +236,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
                 /*
                  * blob type
                  */
+                case 'image' : 
                 case 'varbinary':
                     $definition['type'] = Column::TYPE_BLOB;
                     break;
