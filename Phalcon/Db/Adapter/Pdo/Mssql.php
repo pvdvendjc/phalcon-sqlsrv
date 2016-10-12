@@ -57,23 +57,24 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         if (!isset($descriptor['name'])) {
             $descriptor['name'] = $this->_type;
         }
-        //specific dsn elements
+        // Specific dsn strings
+        $dsn='';
         switch ($descriptor['name']) {
             case 'sqlserv' :
-                $server_key = 'server';
-                $db_key = 'database';
+                $dsn = "sqlserv:server={$descriptor['host']};database={$descriptor['dbname']}";
+                break;
+            case 'odbc' :
+                $dsn = "odbc:driver={$descriptor['driver']};servername={$descriptor['servername']};database={$descriptor['dbname']}";
                 break;
             case 'dblib' :
             case 'sybase' :
             case 'mssql' :
             default :
-                $server_key = 'host';
-                $db_key = 'dbname';
+                $dsn = "{$descriptor['name']}:host={$descriptor['host']};dbname={$descriptor['dbname']}";
                 break;
         }
-        
 
-        $this->_pdo = new \PDO("{$descriptor['name']}:$server_key={$descriptor['host']};$db_key={$descriptor['dbname']}", $descriptor['username'], $descriptor['password'], $options);
+        $this->_pdo = new \PDO($dsn, $descriptor['username'], $descriptor['password'], $options);
 
 //        $this->execute('SET QUOTED_IDENTIFIER ON');
 //        $this->execute("SET ANSI_WARNINGS ON ");
