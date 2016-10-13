@@ -64,17 +64,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
                 $dsn = "sqlserv:server={$descriptor['host']};database={$descriptor['dbname']}";
                 break;
             case 'odbc' :
-                $dsn = "odbc:";
-                if (isset($descriptor['dsn'])) {
-                    $dsn+= "{$descriptor['dsn']};";
-                }
-                if (isset($descriptor['options'])) {
-                    if (is_array($descriptor['options'])) {
-                        foreach ($descriptor['options'] as $key => $option) {
-                            $dsn+= "$key=$option;";    
-                        }
-                    }
-                }
+                $dsn = "odbc:{$descriptor['dsn']}";
                 break;
             case 'dblib' :
             case 'sybase' :
