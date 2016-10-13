@@ -66,7 +66,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
             case 'odbc' :
                 $dsn = "odbc:";
                 if (isset($descriptor['dsn'])) {
-                    $dsn+= "$descriptor['dsn'];";
+                    $dsn+= "{$descriptor['dsn']};";
                 }
                 if (isset($descriptor['options'])) {
                     if (is_array($descriptor['options'])) {
