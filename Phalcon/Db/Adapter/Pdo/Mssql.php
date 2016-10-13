@@ -68,7 +68,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
                 if (isset($descriptor['options'])) {
                     if (is_array($descriptor['options'])) {
                         foreach ($descriptor['options'] as $key => $option) {
-                            $dsn+= "$key=$option;"    
+                            $dsn+= "$key=$option;";    
                         }
                     }
                 }
