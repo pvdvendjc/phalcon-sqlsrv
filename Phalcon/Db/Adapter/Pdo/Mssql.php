@@ -35,7 +35,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
      *
      * @return bool
      */
-    public function connect($descriptor = null)
+    public function connect(array $descriptor = null)
     {
         if (is_null($descriptor) === true) {
             $descriptor = $this->_descriptor;
