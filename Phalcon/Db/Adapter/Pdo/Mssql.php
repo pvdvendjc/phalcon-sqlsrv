@@ -61,7 +61,8 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         $dsn='';
         switch ($descriptor['name']) {
             case 'sqlserv' :
-                $dsn = "sqlserv:server={$descriptor['host']};database={$descriptor['dbname']}";
+            case 'sqlsrv' :
+                $dsn = "{$descriptor['name']}:server={$descriptor['host']};database={$descriptor['dbname']}";
                 break;
             case 'odbc' :
                 $dsn = "odbc:{$descriptor['dsn']}";
@@ -345,43 +346,16 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
             $cursor = \PDO::CURSOR_FWDONLY;
         }
 
-        // Perform the count now so the original statement is the last one executed
-        $rowCount = FALSE;
-        if (substr($sqlStatement, 0, 6) == 'SELECT' && strstr($sqlStatement, "COUNT(*)") === FALSE) {
-            $countStatement = $sqlStatement;
-            // IF the query contains ORDER BY without OFFSET or TOP 
-            // then we need to extract it before performing our COUNT(*) 
-            // since it is invalid in subqueries in SQL SERVER
-            if (substr($countStatement, 8, 3) != "TOP") {
-                $countStatement = str_replace("\r\n", ' ', $sqlStatement);
-                if (preg_match('/ORDER BY(?:(?!OFFSET)(?!ORDER BY)(?!WHERE).)*$/i', $countStatement, $matches)) {
-                    $start = strpos($countStatement, $matches[0]);
-                    $end = $start + strlen($matches[0]);
-                    $countStatement = substr($countStatement, 0, $start - 1) . substr($countStatement, $end);
-                }
-            }
-            // Wrap original query in subquery to get a row count
-            $countStatement = "SELECT [NUM_ROWS] = COUNT(*) FROM ( $countStatement ) count_tbl";
-            if (is_array($bindParams)) {
-                $statement = $pdo->prepare($countStatement, array(\PDO::ATTR_CURSOR => $cursor));
-                if (is_object($statement)) {
-                    $statement = $this->executePrepared($statement, $bindParams, $bindTypes);
-                }
-            } else {
-                $statement = $pdo->prepare($countStatement, array(\PDO::ATTR_CURSOR => $cursor));
-                $statement->execute();
-            }
-            $count_result = $statement->fetch();
-            $rowCount = $count_result['NUM_ROWS'];
-        }
-        
+        // Get the row count with this query by calling the @@RowCount function
+//         $sqlStatement .= "; SELECT @@RowCount as [count];";
+
         if (is_array($bindParams)) {
-            $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
+            $statement = $pdo->prepare($sqlStatement);
             if (is_object($statement)) {
                 $statement = $this->executePrepared($statement, $bindParams, $bindTypes);
             }
         } else {
-            $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
+            $statement = $pdo->prepare($sqlStatement);
             $statement->execute();
         }
 
@@ -389,13 +363,20 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
          * Execute the afterQuery event if a EventsManager is available
          */
         if (is_object($statement)) {
+            $rowcount = false;
+            if (substr($sqlStatement, 0, 6) == 'SELECT' && strstr($sqlStatement, "COUNT(*)") === FALSE) {
+                $res = $pdo->query("SELECT @@ROWCOUNT as [count];"); // Needed for resultset iterator
+                $rowcount = $res->fetch(\PDO::FETCH_ASSOC)['count'];
+            }
+            
+            
             if (is_object($eventsManager)) {
                 $eventsManager->fire('db:afterQuery', $this, $bindParams);
             }
 
-             $result = new ResultPdo($this, $statement, $sqlStatement, $bindParams, $bindTypes);
-             $result->_rowCount = $rowCount;
-             return $result;
+            $result = new ResultPdo($this, $statement, $sqlStatement, $bindParams, $bindTypes);
+            $result->_rowCount = $rowcount;
+            return $result;
         }
 
         return $statement;
