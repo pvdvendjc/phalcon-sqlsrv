@@ -2,7 +2,6 @@
 
 namespace Phalcon\Db\Adapter\Pdo;
 
-use Phalcon\Db\Column;
 use Phalcon\Db\Result\PdoMssql as ResultPdo;
 
 /**

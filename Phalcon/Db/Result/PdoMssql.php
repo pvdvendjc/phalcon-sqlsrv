@@ -15,7 +15,10 @@ namespace Phalcon\Db\Result;
  */
 class PdoMssql extends Pdo
 {
-    public $_rowCount = FALSE;
+    public $_rowCount = false;
+    private $_cursor_pos = 0;
+    private $_fetch_mode = \Phalcon\Db::FETCH_ASSOC;
+    private $_rows, $_obj_rows = null;
     /**
      * Gets number of rows returned by a resultset
      * <code>
@@ -27,15 +30,52 @@ class PdoMssql extends Pdo
      */
     public function numRows()
     {
-        $rowCount = $this->_rowCount;
-        if ($rowCount === FALSE) {
-            $rowCount = $this->_pdoStatement->rowCount();
-            if ($rowCount === FALSE) {
-                parent::numRows();
+        if ($this->_rowCount === false) {
+            $this->_rowCount = $this->_pdoStatement->rowCount();
+            if ($this->_rowCount === -1) {
+                // Do the fetch now and store it
+                $this->fetchAll();
+                
+                $this->_rowCount = is_array($this->_rows) ? count($this->_rows) : false;
             }
-            $this->_rowCount = $rowCount;
         }
 
-        return $rowCount;
+        return $this->_rowCount;
+    }
+    
+    public function fetch($fetchStyle = null, $cursorOrientation = null, $cursorOffset = null) {
+        $rows = $this->fetchAll($fetchStyle);
+        $row = (isset($rows[$this->_cursor_pos])) ? $rows[$this->_cursor_pos] : false;
+        $this->_cursor_pos++;
+        return $row;
+    }
+    
+    public function fetchArray() {
+        return $this->fetchAll();
+    }
+    
+    public function fetchAll($fetchStyle = null, $fetchArgument = null, $ctorArgs = null) {
+        if ($this->_rows === null) {
+            $this->_rows = $this->_pdoStatement->fetchAll(\Phalcon\Db::FETCH_ASSOC);
+        }
+        $rows = $this->_rows;
+        if ($fetchStyle === \Phalcon\Db::FETCH_OBJ) {
+            if ($this->_obj_rows === null) {
+                $this->_obj_rows = [];
+                foreach ($this->_rows as $row) {
+                    $this->_obj_rows[] = (object) $row;
+                }
+            }
+            $rows = $this->_obj_rows;
+        }
+        return $rows;
+    }
+    
+    public function dataSeek($number) {
+        $this->_cursor_pos = $number;
+    }
+    
+    public function setFetchMode($fetchMode) {
+        $this->_fetch_mode = $fetchMode;
     }
 }
