@@ -362,19 +362,12 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
          * Execute the afterQuery event if a EventsManager is available
          */
         if (is_object($statement)) {
-            $rowcount = false;
-            if (substr($sqlStatement, 0, 6) == 'SELECT' && strstr($sqlStatement, "COUNT(*)") === FALSE) {
-                $res = $pdo->query("SELECT @@ROWCOUNT as [count];"); // Needed for resultset iterator
-                $rowcount = $res->fetch(\PDO::FETCH_ASSOC)['count'];
-            }
-            
             
             if (is_object($eventsManager)) {
                 $eventsManager->fire('db:afterQuery', $this, $bindParams);
             }
 
             $result = new ResultPdo($this, $statement, $sqlStatement, $bindParams, $bindTypes);
-            $result->_rowCount = $rowcount;
             return $result;
         }
 
