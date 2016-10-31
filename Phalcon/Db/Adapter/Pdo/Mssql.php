@@ -3,6 +3,7 @@
 namespace Phalcon\Db\Adapter\Pdo;
 
 use Phalcon\Db\Result\PdoMssql as ResultPdo;
+use Phalcon\Db\Column as Column;
 
 /**
  * Phalcon\Db\Adapter\Pdo\Mssql
@@ -19,7 +20,7 @@ use Phalcon\Db\Result\PdoMssql as ResultPdo;
  * $connection = new \Phalcon\Db\Adapter\Pdo\Sqlsrv($config);
  * </code>.
  *
- * @property \Phalcon\Db\Dialect\Sqlsrv $_dialect
+ * @property \Phalcon\Db\Dialect\Mssql $_dialect
  */
 class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterface
 {
@@ -302,7 +303,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
             $columns[] = new Column($columnName, $definition);
             $oldColumn = $columnName;
         }
-
+        
         return $columns;
     }
 
@@ -346,10 +347,9 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         }
 
         // Get the row count with this query by calling the @@RowCount function
-//         $sqlStatement .= "; SELECT @@RowCount as [count];";
 
         if (is_array($bindParams)) {
-            $statement = $pdo->prepare($sqlStatement);
+            $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
             if (is_object($statement)) {
                 $statement = $this->executePrepared($statement, $bindParams, $bindTypes);
             }
@@ -373,6 +373,19 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
 
         return $statement;
     }
+    
+    
+    public function fetchOne($sqlQuery, $fetchMode = \Phalcon\Db::FETCH_ASSOC, $bindParams = null, $bindTypes = null) {
+        $result = $this->query($sqlQuery, $bindParams, $bindTypes);
+        $result->setFetchMode($fetchMode);
+        return $result->fetch();
+    }
+    
+//     public function fetchAll($sqlQuery, $fetchMode = \Phalcon\Db::FETCH_ASSOC, $bindParams = null, $bindTypes = null) {
+//         $result = $this->query($sqlQuery, $bindParams, $bindTypes);
+//         $result->setFetchMode($fetchMode);
+//         return $result->fetchAll();
+//     }
 
     /**
      * Sends SQL statements to the database server returning the success state.

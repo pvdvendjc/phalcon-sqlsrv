@@ -18,7 +18,7 @@ class PdoMssql extends Pdo
     public $_rowCount = false;
     private $_cursor_pos = 0;
     private $_fetch_mode = \Phalcon\Db::FETCH_ASSOC;
-    private $_rows, $_obj_rows = null;
+    private $_rows, $_obj_rows, $_numeric_rows = null;
     /**
      * Gets number of rows returned by a resultset
      * <code>
@@ -44,6 +44,7 @@ class PdoMssql extends Pdo
     }
     
     public function fetch($fetchStyle = null, $cursorOrientation = null, $cursorOffset = null) {
+        var_dump(debug_backtrace());
         $rows = $this->fetchAll($fetchStyle);
         $row = (isset($rows[$this->_cursor_pos])) ? $rows[$this->_cursor_pos] : false;
         $this->_cursor_pos++;
@@ -55,11 +56,15 @@ class PdoMssql extends Pdo
     }
     
     public function fetchAll($fetchStyle = null, $fetchArgument = null, $ctorArgs = null) {
+        if ($fetchStyle !== null) {
+            $this->setFetchMode($fetchStyle);
+        }
         if ($this->_rows === null) {
             $this->_rows = $this->_pdoStatement->fetchAll(\Phalcon\Db::FETCH_ASSOC);
         }
         $rows = $this->_rows;
-        if ($fetchStyle === \Phalcon\Db::FETCH_OBJ) {
+        
+        if ($this->_fetch_mode === \Phalcon\Db::FETCH_OBJ) {
             if ($this->_obj_rows === null) {
                 $this->_obj_rows = [];
                 foreach ($this->_rows as $row) {
@@ -67,6 +72,14 @@ class PdoMssql extends Pdo
                 }
             }
             $rows = $this->_obj_rows;
+        } else if ($this->_fetch_mode === \Phalcon\Db::FETCH_NUM) {
+            if ($this->_numeric_rows === null) {
+                $this->_numeric_rows = [];
+                foreach ($this->_rows as $row) {
+                    $this->_numeric_rows[] = array_values($row);
+                }
+            }
+            $rows = $this->_numeric_rows;
         }
         return $rows;
     }
