@@ -44,7 +44,6 @@ class PdoMssql extends Pdo
     }
     
     public function fetch($fetchStyle = null, $cursorOrientation = null, $cursorOffset = null) {
-        var_dump(debug_backtrace());
         $rows = $this->fetchAll($fetchStyle);
         $row = (isset($rows[$this->_cursor_pos])) ? $rows[$this->_cursor_pos] : false;
         $this->_cursor_pos++;

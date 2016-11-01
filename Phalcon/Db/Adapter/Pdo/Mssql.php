@@ -349,7 +349,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         // Get the row count with this query by calling the @@RowCount function
 
         if (is_array($bindParams)) {
-            $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
+            $statement = $pdo->prepare($sqlStatement);
             if (is_object($statement)) {
                 $statement = $this->executePrepared($statement, $bindParams, $bindTypes);
             }
