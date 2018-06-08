@@ -241,6 +241,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
                 case 'image' : 
                 case 'varbinary':
                     $definition['type'] = Column::TYPE_BLOB;
+                    $definition['bindType'] = Column::BIND_PARAM_BLOB;
                     break;
 
                 /*
@@ -381,78 +382,125 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
         return $result->fetch();
     }
     
-//     public function fetchAll($sqlQuery, $fetchMode = \Phalcon\Db::FETCH_ASSOC, $bindParams = null, $bindTypes = null) {
-//         $result = $this->query($sqlQuery, $bindParams, $bindTypes);
-//         $result->setFetchMode($fetchMode);
-//         return $result->fetchAll();
-//     }
-
     /**
-     * Sends SQL statements to the database server returning the success state.
-     * Use this method only when the SQL statement sent to the server doesn't return any rows
-     * <code>
-     * //Inserting data
-     * $success = $connection->execute("INSERT INTO robots VALUES (1, 'Astro Boy')");
-     * $success = $connection->execute("INSERT INTO robots VALUES (?, ?)", array(1, 'Astro Boy'));
-     * </code>.
+     * Executes a prepared statement binding. This function uses integer indexes starting from zero
      *
-     * @param string $sqlStatement
-     * @param mixed  $bindParams
-     * @param mixed  $bindTypes
+     *<code>
+     * use Phalcon\Db\Column;
      *
-     * @return bool
+     * $statement = $db->prepare(
+     *     "SELECT * FROM robots WHERE name = :name"
+     * );
+     *
+     * $result = $connection->executePrepared(
+     *     $statement,
+     *     [
+     *         "name" => "Voltron",
+     *     ],
+     *     [
+     *         "name" => Column::BIND_PARAM_INT,
+     *     ]
+     * );
+     *</code>
+     *
+     * @param \PDOStatement statement
+     * @param array placeholders
+     * @param array dataTypes
+     * @return \PDOStatement
      */
-//    public function execute($sqlStatement, $bindParams = null, $bindTypes = null)
-//    {
-//        $eventsManager = $this->_eventsManager;
-//
-//        /*
-//         * Execute the beforeQuery event if a EventsManager is available
-//         */
-//        if (is_object($eventsManager)) {
-//            $this->_sqlStatement = $sqlStatement;
-//            $this->_sqlVariables = $bindParams;
-//            $this->_sqlBindTypes = $bindTypes;
-//
-//            if ($eventsManager->fire('db:beforeQuery', $this, $bindParams) === false) {
-//                return false;
-//            }
-//        }
-//
-//        /*
-//         * Initialize affectedRows to 0
-//         */
-//        $affectedRows = 0;
-//
-//        $pdo = $this->_pdo;
-//
-//        $cursor = \PDO::CURSOR_SCROLL;
-//        if (strpos($sqlStatement, 'exec') !== false) {
-//            $cursor = \PDO::CURSOR_FWDONLY;
-//        }
-//
-//        if (is_array($bindParams)) {
-//            $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
-//            if (is_object($statement)) {
-//                $newStatement = $this->executePrepared($statement, $bindParams, $bindTypes);
-//                $affectedRows = $newStatement->rowCount();
-//            }
-//        } else {
-////            $statement = $pdo->prepare($sqlStatement, array(\PDO::ATTR_CURSOR => $cursor));
-////            $statement->execute();
-//            $affectedRows = $pdo->exec($sqlStatement);
-//        }
-//
-//        /*
-//         * Execute the afterQuery event if an EventsManager is available
-//         */
-//        if (is_int($affectedRows)) {
-//            $this->_affectedRows = affectedRows;
-//            if (is_object($eventsManager)) {
-//                $eventsManager->fire('db:afterQuery', $this, $bindParams);
-//            }
-//        }
-//
-//        return true;
-//    }
+    // Transcribed to php 
+    public function executePrepared(\PDOStatement $statement, array $placeholders, $dataTypes)
+    {
+        foreach ($placeholders as $wildcard => $value) {
+            if (gettype($wildcard) == "integer") {
+                $parameter = $wildcard + 1;
+            } elseif (gettype($wildcard) == "string") {
+                $parameter = $wildcard;
+            } else {
+                throw new \Exception("Invalid bind parameter (1)");
+            }
+            
+            if (gettype($dataTypes) == "array" && isset($dataTypes[$wildcard])) { 
+                $type = $dataTypes[$wildcard];
+                
+                /**
+                 * The bind type is double so we try to get the double value
+                 */
+                if ($type == Column::BIND_PARAM_DECIMAL) {
+                    $castValue = doubleval($value);
+                    $type = Column::BIND_SKIP;
+                } else {
+                    // globals_get("db.force_casting")
+                    if (false) {
+                        if (gettype($value != "array")) {
+                            switch ($type) {
+                                
+                                case Column::BIND_PARAM_INT:
+                                    $castValue = intval($value, 10);
+                                    break;
+                                    
+                                case Column::BIND_PARAM_STR:
+                                    $castValue = (string) $value;
+                                    break;
+                                    
+                                case Column::BIND_PARAM_NULL:
+                                    $castValue = null;
+                                    break;
+                                    
+                                case Column::BIND_PARAM_BOOL:
+                                    $castValue = (boolean) $value;
+                                    break;
+                                    
+                                default:
+                                    $castValue = $value;
+                                    break;
+                            }
+                        } else {
+                            $castValue = $value;
+                        }
+                    } else {
+                        $castValue = $value;
+                    }
+                }
+                
+                /**
+                 * 1024 is ignore the bind type
+                 */
+                if (gettype($castValue) != "array") {
+                    if ($type == Column::BIND_SKIP) {
+                        $statement->bindValue($parameter, $castValue);
+                    } else {
+                        if ($type == Column::BIND_PARAM_BLOB) {
+                            // Prevent by-reference overwrites
+                            $param = $parameter;
+                            $cValue = $castValue;
+                            // Bind Blobs using bindParam
+                            $statement->bindParam($param, $cValue, \PDO::PARAM_LOB, 0, \PDO::SQLSRV_ENCODING_BINARY);
+                        } else {
+                            $statement->bindValue($parameter, $castValue, $type);
+                        }
+                    }
+                } else {
+                    foreach ($castValue as $position => $itemValue) {
+                        if ($type == Column::BIND_SKIP) {
+                            $statement->bindValue($parameter . $position, $itemValue);
+                        } else {
+                            $statement->bindValue($parameter . $position, $itemValue, $type);
+                        }
+                    }
+                }
+            } else {
+                if (gettype($value != "array")) {
+                    $statement->bindValue($parameter, $value);
+                } else {
+                    foreach ($value as $position => $itemValue) {
+                        $statement->bindValue($parameter . $position, $itemValue);
+                    }
+                }
+            }
+        }
+        
+        $statement->execute();
+        return $statement;
+    }
 }
