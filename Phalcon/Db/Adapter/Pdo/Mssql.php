@@ -490,7 +490,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
                     }
                 }
             } else {
-                if (gettype($value != "array")) {
+                if (gettype($value) != "array") {
                     $statement->bindValue($parameter, $value);
                 } else {
                     foreach ($value as $position => $itemValue) {
