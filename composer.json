@@ -1,6 +1,6 @@
 {
-    "name": "dnapierata/phalcon-sqlsrv",
-    "homepage": "https://github.com/dnapierata/phalcon-sqlsrv",
+    "name": "pvdvendjc/phalcon-sqlsrv",
+    "homepage": "https://github.com/pvdvendjc/phalcon-sqlsrv",
     "description": "Phalcon MS SQL Adapter",
     "type": "library",
     "license": "MIT",
@@ -13,11 +13,11 @@
         "sybase"
     ],
     "authors": [{
-        "name": "David Napierata"
+        "name": "Pieter van de Ven"
     }],
     "repositories": [{
         "type": "git",
-        "url": "https://github.com/dnapierata/phalcon-sqlsrv"
+        "url": "https://github.com/pvdvendjc/phalcon-sqlsrv"
     }],
     "require": {
         "php": ">=5.4",
