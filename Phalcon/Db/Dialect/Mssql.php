@@ -199,10 +199,10 @@ class Mssql extends \Phalcon\Db\Dialect
                 if (empty($columnSql)) {
                     $columnSql .= 'BIGINT';
                 }
-                $size = $column->getSize();
-                if ($size) {
-                    $columnSql .= '('.$size.')';
-                }
+//                $size = $column->getSize();
+//                if ($size) {
+//                    $columnSql .= '('.$size.')';
+//                }
 //                if ($column->isUnsigned()) {
 //                    $columnSql .= ' UNSIGNED';
 //                }
@@ -482,7 +482,7 @@ class Mssql extends \Phalcon\Db\Dialect
                 if (strpos(strtoupper($defaultValue), 'CURRENT_TIMESTAMP') !== false) {
                     $columnLine .= ' DEFAULT CURRENT_TIMESTAMP';
                 } else {
-                    $columnLine .= ' DEFAULT "'.addcslashes($defaultValue, '"').'"';
+                    $columnLine .= " DEFAULT '" . addcslashes($defaultValue, '"')."'";
                 }
             }
 
@@ -514,6 +514,7 @@ class Mssql extends \Phalcon\Db\Dialect
          * Create related indexes
          */
         if (isset($definition['indexes']) === true) {
+            $indexSql = '';
             foreach ($definition['indexes'] as $index) {
                 $indexName = $index->getName();
                 $indexType = $index->getType();
@@ -522,16 +523,15 @@ class Mssql extends \Phalcon\Db\Dialect
                  * If the index name is primary we add a primary key
                  */
                 if ($indexName == 'PRIMARY') {
-                    $indexSql = 'PRIMARY KEY ('.$this->getColumnList($index->getColumns()).')';
+                    $pkSql = 'PRIMARY KEY ('.$this->getColumnList($index->getColumns()).')';
+                    $createLines[] = $pkSql;
                 } else {
                     if (!empty($indexType)) {
-                        $indexSql = $indexType.' KEY ['.$indexName.'] ('.$this->getColumnList($index->getColumns()).')';
+                        $indexSql .= 'CREATE ' . $indexType . ' INDEX [' . $indexName . '] ON ' . $tableName . ' (' . $this->getColumnList($index->getColumns()) . '); ';
                     } else {
-                        $indexSql = 'KEY ['.$indexName.'] ('.$this->getColumnList($index->getColumns()).')';
+                        $indexSql .= 'CREATE INDEX [' . $indexName . '] ON ' . $tableName . ' (' . $this->getColumnList($index->getColumns()) . '); ';
                     }
                 }
-
-                $createLines[] = $indexSql;
             }
         }
 
@@ -545,12 +545,12 @@ class Mssql extends \Phalcon\Db\Dialect
 
                 $onDelete = $reference->getOnDelete();
                 if (!empty($onDelete)) {
-                    $referenceSql .= ' ON DELETE '.onDelete;
+                    $referenceSql .= ' ON DELETE '. $onDelete;
                 }
 
                 $onUpdate = $reference->getOnUpdate();
                 if (!empty($onUpdate)) {
-                    $referenceSql .= ' ON UPDATE '.onUpdate;
+                    $referenceSql .= ' ON UPDATE '. $onUpdate;
                 }
 
                 $createLines[] = $referenceSql;
@@ -561,6 +561,7 @@ class Mssql extends \Phalcon\Db\Dialect
         if (isset($definition['options'])) {
             $sql .= ' '.$this->_getTableOptions($definition);
         }
+        $sql .= $indexSql;
 
         return $sql;
     }
