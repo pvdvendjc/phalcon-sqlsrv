@@ -378,7 +378,7 @@ class Mssql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterInterf
     
     public function fetchOne($sqlQuery, $fetchMode = \Phalcon\Db::FETCH_ASSOC, $bindParams = null, $bindTypes = null) {
         $result = $this->query($sqlQuery, $bindParams, $bindTypes);
-        $result->setFetchMode($fetchMode);
+        $result->setFetchMode($fetchMode, null, null);
         return $result->fetch();
     }
     

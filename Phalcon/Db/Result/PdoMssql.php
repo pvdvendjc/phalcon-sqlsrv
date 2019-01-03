@@ -56,7 +56,7 @@ class PdoMssql extends Pdo
     
     public function fetchAll($fetchStyle = null, $fetchArgument = null, $ctorArgs = null) {
         if ($fetchStyle !== null) {
-            $this->setFetchMode($fetchStyle);
+            $this->setFetchMode($fetchStyle, $fetchArgument, $ctorArgs);
         }
         if ($this->_rows === null) {
             $this->_rows = $this->_pdoStatement->fetchAll(\Phalcon\Db::FETCH_ASSOC);
@@ -87,7 +87,7 @@ class PdoMssql extends Pdo
         $this->_cursor_pos = $number;
     }
     
-    public function setFetchMode($fetchMode) {
+    public function setFetchMode($fetchMode, $colNoOrClassNameOrObject = null, $ctorArgs = null) {
         $this->_fetch_mode = $fetchMode;
     }
 }
